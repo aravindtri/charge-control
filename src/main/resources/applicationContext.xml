@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:task="http://www.springframework.org/schema/task"
+  xmlns="http://www.springframework.org/schema/beans"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/task
+    http://www.springframework.org/schema/task/spring-task.xsd">
+
+  <alias name="juiceProChargerCurrentUpdater" alias="chargerCurrentUpdater"/>
+  <bean id="juiceProChargerCurrentUpdater"
+    class="com.automate.chargecontrol.service.impl.JuiceProChargerCurrentUpdater"
+    autowire="byName">
+    <property name="remoteChromeUrl" value="${remote.chrome.url}"/>
+    <property name="baseUrl" value="${juicepro.base.url}"/>
+    <property name="userName" value="${juicepro.username}"/>
+    <property name="password" value="${juicepro.password}"/>
+  </bean>
+
+  <alias name="propertyBasedAdjustChargeDecider" alias="adjustChargeDecider"/>
+  <bean id="propertyBasedAdjustChargeDecider"
+    class="com.automate.chargecontrol.service.impl.PropertyBasedAdjustChargeDecider"
+    autowire="byName">
+    <property name="adjustCurrent" value="${adjust.charge.current}"/>
+  </bean>
+
+  <bean id="defaultRestTemplate" class="org.springframework.web.client.RestTemplate"/>
+
+  <bean id="availableEnergyTemplate" parent="defaultRestTemplate"/>
+
+  <alias name="defaultEnergyAvailabilityService" alias="energyAvailabilityService"/>
+  <bean id="defaultEnergyAvailabilityService"
+    class="com.automate.chargecontrol.service.impl.DefaultEnergyAvailabilityService"
+    autowire="byName">
+    <property name="availableEnergyServiceUrl" value="${available.energy.status.url}"/>
+  </bean>
+
+  <alias name="defaultChargeCurrentUpdateFacade" alias="chargeCurrentUpdateFacade"/>
+  <bean id="defaultChargeCurrentUpdateFacade"
+    class="com.automate.chargecontrol.facade.impl.DefaultChargeCurrentUpdateFacade"
+    autowire="byName">
+    <property name="bufferEnergy" value="${buffer.energy}"/>
+    <property name="baseVoltage" value="${base.voltage}"/>
+    <property name="minCurrent" value="${minimum.charge.current}"/>
+  </bean>
+
+  <task:scheduled-tasks>
+    <task:scheduled ref="chargeCurrentUpdateFacade" method="updateChargeCurrent"
+      fixed-rate="${adjust.charge.interval.schedule}"/>
+  </task:scheduled-tasks>
+</beans>
