@@ -16,6 +16,7 @@
     <property name="baseUrl" value="${juicepro.base.url}"/>
     <property name="userName" value="${juicepro.username}"/>
     <property name="password" value="${juicepro.password}"/>
+    <property name="remoteDriver" value="${remote.chrome.enabled}"/>
   </bean>
 
   <alias name="propertyBasedAdjustChargeDecider" alias="adjustChargeDecider"/>

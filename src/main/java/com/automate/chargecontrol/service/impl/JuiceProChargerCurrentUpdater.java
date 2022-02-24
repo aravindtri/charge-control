@@ -9,6 +9,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ public class JuiceProChargerCurrentUpdater implements ChargerCurrentUpdater {
   private String baseUrl;
   private String userName;
   private String password;
+  private boolean isRemoteDriver;
 
   private static void addInputOnBy(WebDriver driver, By by, String keys, boolean deleteFirst) {
     WebElement emailTxtBox = driver.findElement(by);
@@ -39,7 +41,7 @@ public class JuiceProChargerCurrentUpdater implements ChargerCurrentUpdater {
   @Override
   public boolean updateChargeCurrent(int ampere) {
     try {
-      RemoteWebDriver driver = getRemoteWebDriver();
+      WebDriver driver = getWebDriver(isRemoteDriver());
       loginToJuicePro(driver);
       selectCharger(driver);
       updateChargeCurrent(ampere, driver);
@@ -52,7 +54,7 @@ public class JuiceProChargerCurrentUpdater implements ChargerCurrentUpdater {
     return false;
   }
 
-  private void loginToJuicePro(RemoteWebDriver driver) {
+  private void loginToJuicePro(WebDriver driver) {
     LOG.info("Logging in...");
     driver.get(getBaseUrl());
     LOG.info("Title of login page {}", driver.getTitle());
@@ -64,13 +66,13 @@ public class JuiceProChargerCurrentUpdater implements ChargerCurrentUpdater {
     LOG.info("Title after logging in {}", driver.getTitle());
   }
 
-  private void selectCharger(RemoteWebDriver driver) {
+  private void selectCharger(WebDriver driver) {
     LOG.info("Selecting charger...");
     clickElement(driver, By.partialLinkText("MORE DETAILS"));
     LOG.info("Title after selecting charger in {}", driver.getTitle());
   }
 
-  private void updateChargeCurrent(int ampere, RemoteWebDriver driver) {
+  private void updateChargeCurrent(int ampere, WebDriver driver) {
     LOG.info("Updating charge current to {}...", ampere);
     addInputOnBy(driver, By.cssSelector("div#limitBlock input.text-box"), String.valueOf(ampere),
         true);
@@ -85,18 +87,23 @@ public class JuiceProChargerCurrentUpdater implements ChargerCurrentUpdater {
     LOG.info("Logout complete");
   }
 
-  private void closeBrowserSession(RemoteWebDriver driver) {
+  private void closeBrowserSession(WebDriver driver) {
     driver.close();
     driver.quit();
     LOG.info("Browser closed and destroyed");
   }
 
 
-  private RemoteWebDriver getRemoteWebDriver() throws MalformedURLException {
-    ThreadLocal<RemoteWebDriver> threadLocal = new ThreadLocal<>();
+  private WebDriver getWebDriver(boolean isRemoteDriver) throws MalformedURLException {
     ChromeOptions options = new ChromeOptions();
-    threadLocal.set(new RemoteWebDriver(new URL(getRemoteChromeUrl()), options));
-    return threadLocal.get();
+    options.addArguments("--headless");
+    if (isRemoteDriver) {
+      ThreadLocal<WebDriver> threadLocal = new ThreadLocal<>();
+      threadLocal.set(new RemoteWebDriver(new URL(getRemoteChromeUrl()), options));
+      return threadLocal.get();
+    } else {
+      return new ChromeDriver(options);
+    }
   }
 
   public String getRemoteChromeUrl() {
@@ -129,5 +136,13 @@ public class JuiceProChargerCurrentUpdater implements ChargerCurrentUpdater {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public boolean isRemoteDriver() {
+    return isRemoteDriver;
+  }
+
+  public void setRemoteDriver(boolean remoteDriver) {
+    isRemoteDriver = remoteDriver;
   }
 }
