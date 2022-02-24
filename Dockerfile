@@ -1,13 +1,14 @@
-### 1. Get Linux
-FROM python:3.10-buster
+FROM openjdk:8-jdk-slim-buster
 
-### 2. Get Java via the package manager
-RUN apk update \
-&& apk upgrade \
-&& apk add --no-cache bash \
-&& apk add --no-cache --virtual=build-dependencies unzip \
-&& apk add --no-cache curl \
-&& apk add --no-cache openjdk8-jre
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        python3.7 \
+        python3-pip \
+        python3.7-dev \
+        python3-setuptools \
+        python3-wheel 
 
 ARG JAR_FILE=./target/*.jar
 COPY ${JAR_FILE} app.jar
